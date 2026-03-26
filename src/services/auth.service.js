@@ -5,6 +5,8 @@ import {
   generateRefreshToken,
 } from "../utils/jwt.js";
 import jwt from  "jsonwebtoken"
+import prisma from "../config/db.js";
+import { generateAccessToken,generateRefreshToken } from "../utils/jwt.js";
 // signup
 export const signupService = async (email, password) => {
   const existingUser = await prisma.user.findUnique({
@@ -56,27 +58,52 @@ export const loginService = async (email, password) => {
   });
   return { accessToken, refreshToken };
 };
-export const refreshService = async (token) => {
-  // check token exists in DB
+export const refreshService = async (oldToken) => {
+  // check token in DB
   const stored = await prisma.token.findFirst({
-    where: { token },
+    where: { token: oldToken },
   });
+
   if (!stored) {
     throw new Error("Invalid refresh token");
   }
-  // verify token
-  const user = jwt.verify(token, process.env.REFRESH_SECRET);
 
-  // generate new access token
-  const accessToken = generateAccessToken({
-    id: user.id,
-    role: user.role,
+  // verify token
+  const payload = jwt.verify(oldToken, process.env.REFRESH_SECRET);
+
+  // ❌ DELETE OLD TOKEN (rotation)
+  await prisma.token.delete({
+    where: { id: stored.id },
   });
-  return { accessToken };
+
+  // ✅ CREATE NEW TOKENS
+  const accessToken = generateAccessToken({
+    id: payload.id,
+    role: payload.role,
+  });
+
+  const newRefreshToken = generateRefreshToken({
+    id: payload.id,
+  });
+
+  // store new refresh token
+  await prisma.token.create({
+    data: {
+      userId: payload.id,
+      token: newRefreshToken,
+      type: "REFRESH",
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    },
+  });
+
+  return {
+    accessToken,
+    refreshToken: newRefreshToken,
+  };
 };
-export const logoutService=async(token)=>{
+export const logoutAllService = async (userId) => {
   await prisma.token.deleteMany({
-    where:{token},
+    where: { userId },
   });
 };
 

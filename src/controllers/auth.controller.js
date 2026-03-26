@@ -1,4 +1,4 @@
-import { signupService, loginService, logoutService } from "../services/auth.service.js";
+import { signupService, loginService, logoutAllService } from "../services/auth.service.js";
 import { refreshService } from "../services/auth.service.js";
 // signup
 export const signup = async (req, res) => {
@@ -15,7 +15,7 @@ export const signup = async (req, res) => {
     });
   }
 };
-// login
+// login..
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -30,6 +30,7 @@ export const login = async (req, res) => {
     });
   }
 };
+//refrehs service
 export const  refresh=async(req,res)=>{
   try {
     const {token}=req.body;
@@ -39,12 +40,13 @@ export const  refresh=async(req,res)=>{
     res.status(403).json({message:error.messgae});
   }
 };
-export const logout=async(req,res)=>{
+//. logout 
+export const logoutAll = async (req, res) => {
   try {
-     const token=req.body;
-     await logoutService(token);
-     res.json({message:"Logged Out"});
+    await logoutAllService(req.user.id);
+
+    res.json({ message: "Logged out from all devices" });
   } catch (error) {
-    res.status(400).json({message:error.message});
+    res.status(400).json({ message: error.message });
   }
-}
+};
