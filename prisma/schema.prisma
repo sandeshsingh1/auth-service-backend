@@ -1,3 +1,12 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
 model User {
   id            String   @id @default(uuid())
   email         String   @unique
@@ -7,13 +16,16 @@ model User {
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  // ✅ ADD THIS (important)
+  tokens        Token[]
 }
 
 model Token {
   id        String   @id @default(uuid())
   userId    String
   token     String
-  type      String   // REFRESH | RESET | VERIFY
+  type      String
   expiresAt DateTime
 
   user User @relation(fields: [userId], references: [id])

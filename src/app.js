@@ -1,4 +1,4 @@
-import express from express
+import express from "express"
 import dotenv from "dotenv"
 import cors from "cors"
 import cookieParser from "cookie-parser"
@@ -17,4 +17,4 @@ app.get("/",(req,res)=>{
   res.send("Auth service is running");
 })
 
-
+export default app;
