@@ -4,7 +4,7 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from "../utils/jwt.js";
-
+import jwt from  "jsonwebtoken"
 // signup
 export const signupService = async (email, password) => {
   const existingUser = await prisma.user.findUnique({
@@ -54,6 +54,29 @@ export const loginService = async (email, password) => {
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     },
   });
-
   return { accessToken, refreshToken };
 };
+export const refreshService = async (token) => {
+  // check token exists in DB
+  const stored = await prisma.token.findFirst({
+    where: { token },
+  });
+  if (!stored) {
+    throw new Error("Invalid refresh token");
+  }
+  // verify token
+  const user = jwt.verify(token, process.env.REFRESH_SECRET);
+
+  // generate new access token
+  const accessToken = generateAccessToken({
+    id: user.id,
+    role: user.role,
+  });
+  return { accessToken };
+};
+export const logoutService=async(token)=>{
+  await prisma.token.deleteMany({
+    where:{token},
+  });
+};
+

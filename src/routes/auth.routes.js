@@ -1,7 +1,22 @@
-import express from "express"
-import { signup,login } from "../controllers/auth.controller.js"
-const router=express.Router();
-// signup
-router.post("/signup",signup);
-router.post("/login",login);
-export default router
+import express from "express";
+import { signup, login, refresh, logout } from "../controllers/auth.controller.js";
+import { protect } from "../middleware/auth.middleware.js";
+import { authorize } from "../middleware/role.middleware.js";
+const router = express.Router();
+
+// auth routes
+router.post("/signup", signup);
+router.post("/login", login);
+router.post("/refresh", refresh);
+router.post("/logout", logout);
+
+// protected routes
+router.get("/profile", protect, (req, res) => {
+  res.json({ user: req.user });
+});
+
+router.get("/admin", protect, authorize("ADMIN"), (req, res) => {
+  res.json({ message: "Admin only" });
+});
+
+export default router;
