@@ -1,0 +1,20 @@
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  password      String
+  isVerified    Boolean  @default(false)
+  role          String   @default("USER")
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Token {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String
+  type      String   // REFRESH | RESET | VERIFY
+  expiresAt DateTime
+
+  user User @relation(fields: [userId], references: [id])
+}
